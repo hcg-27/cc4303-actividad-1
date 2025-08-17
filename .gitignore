@@ -1,0 +1,17 @@
+# Byte-compiled / optimized 
+__pycache__/
+*.py[codz]
+
+# Unit test
+.pytest_cache/
+
+# Environment
+.venv/
+
+# Mypy
+.mypy.cache/
+.dmypy.json
+dmypy.json
+
+# Editor
+.vscode/
