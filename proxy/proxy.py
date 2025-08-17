@@ -14,7 +14,7 @@ def parse_HTTP_message(http_message: bytes) -> dict[str, bytes | dict]:
     start_line, *headers = head.split(b'\r\n')
 
     # Crear la estructura de datos
-    http_struct = {
+    http_struct: dict[str, bytes | dict] = {
         "START_LINE": start_line,
         "HEADERS": {
             k: v for k, v in [
