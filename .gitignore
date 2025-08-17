@@ -9,7 +9,7 @@ __pycache__/
 .venv/
 
 # Mypy
-.mypy.cache/
+.mypy_cache/
 .dmypy.json
 dmypy.json
 
