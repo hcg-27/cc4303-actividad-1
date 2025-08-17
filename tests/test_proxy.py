@@ -1,6 +1,9 @@
-from proxy.proxy import parse_HTTP_message
+from proxy.proxy import (
+    parse_HTTP_message,
+    create_HTTP_message
+)
 
-class TestParseHTTP:
+class TestParseCreateHTTP:
     request_msg = b"""GET / HTTP/1.1\r
 Host: www.example.com\r
 Content-Type: text/html; charset=UTF-8\r
@@ -68,3 +71,9 @@ Connection: Close\r
 
     def test_parse_HTTP_response(self):
         assert parse_HTTP_message(self.response_msg) == self.response_struct
+
+    def test_create_HTTP_request(self):
+        assert create_HTTP_message(self.request_struct) == self.request_msg
+
+    def test_create_HTTP_response(self):
+        assert create_HTTP_message(self.response_struct) == self.response_msg

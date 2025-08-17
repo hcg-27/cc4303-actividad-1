@@ -25,3 +25,5 @@ def parse_HTTP_message(http_message: bytes) -> dict[str, bytes | dict]:
     }
 
     return http_struct
+
+def create_HTTP_message(http_struct: dict[str, bytes | dict]) -> bytes: ...
