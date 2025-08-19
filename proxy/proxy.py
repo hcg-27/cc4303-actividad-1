@@ -1,3 +1,8 @@
+import socket
+from datetime import datetime as dt
+
+IP, PORT = 'localhost', 8000
+
 def parse_HTTP_message(http_message: bytes) -> dict[str, bytes]:
     """Parse an HTTP message into a dictionary.
     
@@ -39,3 +44,43 @@ def create_HTTP_message(http_struct: dict[str, bytes]) -> bytes:
     message += (b'\r\n' + body[1])
 
     return message 
+
+if __name__ == "__main__":
+    # Inicializar socket del proxy
+    proxy_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    # Hacer que escuche en la dirección y puerto deseado
+    proxy_socket.bind((IP, PORT))
+    proxy_socket.listen(5)
+
+    # Esperar petición de conexicón de algún cliente
+    client_socket, _ = proxy_socket.accept()
+
+    # Esperar GET del cliente
+    request = client_socket.recv(8192)
+    if b'GET' in parse_HTTP_message(request)["START_LINE"]:
+        # Leer archivo HTML
+        with open("index.html", "rb") as file:
+            content = file.read()
+            content_length = len(content)
+
+        # Crear estructura para la respuesta HTTP
+        response_struct = {
+            "START_LINE": b'HTTP/1.1 200 OK',
+            "BODY": content,
+            "Server": b'Linux Mint/22.1',
+            "Date": f'{dt.now().strftime("%a, %d %b %Y %H:%M:%S UTC-4")}'.encode(),
+            "Content-Type": b'text/html; charset=utf-8',
+            "Content-Length": f' {content_length}'.encode(),
+            "Connection": b'keep-alive',
+            "Acces_Control-Allow-Origin": b'*'
+        }
+
+        # Construir respuesta
+        response = create_HTTP_message(response_struct)
+
+        # Enviar respuesta
+        client_socket.send(response)
+
+        # Cerrar conexión
+        client_socket.close()
