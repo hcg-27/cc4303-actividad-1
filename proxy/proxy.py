@@ -75,6 +75,8 @@ if __name__ == "__main__":
             "Connection": b'keep-alive',
             "Acces_Control-Allow-Origin": b'*'
         }
+        
+        response_struct |= {'X-ElQuePregunta': b"Hernan Cisternas"}
 
         # Construir respuesta
         response = create_HTTP_message(response_struct)
