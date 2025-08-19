@@ -1,10 +1,9 @@
-def parse_HTTP_message(http_message: bytes) -> dict[str, bytes | dict]:
-    """Parse an HTTP message into a 3-key dictionary.
+def parse_HTTP_message(http_message: bytes) -> dict[str, bytes]:
+    """Parse an HTTP message into a dictionary.
     
-    The returned dictionary has the following keys: 'START_LINE', 'HEADERS' and
-    'BODY', they hold bytes, dict and bytes respectively. 
-    
-    Note that the dictionary follows the typical structure of an HTTP message.
+    The returned dict always contains the following keys: 'START_LINE' and
+    'BODY'. It also contains a variable number of keys, each representing a
+    header of the original message.
     """
 
     # Separar mensaje en head y body
@@ -13,15 +12,13 @@ def parse_HTTP_message(http_message: bytes) -> dict[str, bytes | dict]:
     # Separar la start-line de el resto de headers
     start_line, *headers = head.split(b'\r\n')
 
-    # Crear la estructura de datos
-    http_struct: dict[str, bytes | dict] = {
+    # Crear la estructura de datos y añadir start line y body
+    http_struct = {
         "START_LINE": start_line,
-        "HEADERS": {
-            k: v for k, v in [
-                header.split(b':', maxsplit=1) for header in headers
-            ]
-        },
-        "BODY": body
+        "BODY": body,
+        **{k.decode(): v for k, v in [
+            header.split(b': ', maxsplit=1) for header in headers
+        ]}
     }
 
     return http_struct
