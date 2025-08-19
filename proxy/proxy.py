@@ -1,5 +1,9 @@
+import argparse
+import json
 import socket
+import sys
 from datetime import datetime as dt
+from pathlib import Path
 
 IP, PORT = 'localhost', 8000
 
@@ -46,6 +50,29 @@ def create_HTTP_message(http_struct: dict[str, bytes]) -> bytes:
     return message 
 
 if __name__ == "__main__":
+
+    # Inicializar y configurar cli parser
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-c", "--config", type=str,
+                        help="full path al JSON de configuración",
+                        default="config/config.json")
+    
+    # Obtener filepath
+    filepath = Path(vars(parser.parse_args())['config'])
+
+    # Leer archivo de configuración
+    try:
+        with open(filepath, "r") as json_file:
+            x_el_que_pregunta = bytes(
+                json.load(json_file)["X-ElQuePregunta"], encoding="UTF-8"
+            )
+    except json.JSONDecodeError:
+        print(f"Error: formato JSON invalido en {filepath}")
+        sys.exit(1)
+    except FileNotFoundError:
+        print(f"Error: el archivo {filepath} no existe")
+        sys.exit(1)
+
     # Inicializar socket del proxy
     proxy_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -60,8 +87,8 @@ if __name__ == "__main__":
     request = client_socket.recv(8192)
     if b'GET' in parse_HTTP_message(request)["START_LINE"]:
         # Leer archivo HTML
-        with open("index.html", "rb") as file:
-            content = file.read()
+        with open("index.html", "rb") as html_file:
+            content = html_file.read()
             content_length = len(content)
 
         # Crear estructura para la respuesta HTTP
@@ -76,7 +103,8 @@ if __name__ == "__main__":
             "Acces_Control-Allow-Origin": b'*'
         }
         
-        response_struct |= {'X-ElQuePregunta': b"Hernan Cisternas"}
+        # Agregar header
+        response_struct |= {'X-ElQuePregunta': x_el_que_pregunta}
 
         # Construir respuesta
         response = create_HTTP_message(response_struct)
