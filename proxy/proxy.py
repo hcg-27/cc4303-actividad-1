@@ -23,20 +23,19 @@ def parse_HTTP_message(http_message: bytes) -> dict[str, bytes]:
 
     return http_struct
 
-def create_HTTP_message(http_struct: dict[str, bytes | dict]) -> bytes:
+def create_HTTP_message(http_struct: dict[str, bytes]) -> bytes:
+
+    # Obtener start_line, body y headers
+    start_line, body, *headers = http_struct.items()
 
     # Inicializar mensaje HTTP con la start line
-    assert isinstance(http_struct["START_LINE"], bytes)
-    message = http_struct["START_LINE"] + b'\r\n'
+    message = start_line[1] + b'\r\n'
 
     # Agregar headers
-    assert isinstance(http_struct["HEADERS"], dict)
-    for k, v in http_struct["HEADERS"].items():
-        assert isinstance(k, bytes) and isinstance(v, bytes)
-        message += (k + b':' + v + b'\r\n')
+    for k, v in headers:
+        message += (k.encode() + b': ' + v + b'\r\n')
     
     # Agregar body
-    assert isinstance(http_struct["BODY"], bytes)
-    message += (b'\r\n' + http_struct["BODY"])
+    message += (b'\r\n' + body[1])
 
     return message 
