@@ -49,6 +49,8 @@ def create_HTTP_message(http_struct: dict[str, bytes]) -> bytes:
 
     return message 
 
+def get_host(http_struct: dict[str, bytes]) -> bytes: ...
+
 if __name__ == "__main__":
 
     # Inicializar y configurar cli parser

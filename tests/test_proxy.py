@@ -1,6 +1,7 @@
 from proxy.proxy import (
     parse_HTTP_message,
-    create_HTTP_message
+    create_HTTP_message,
+    get_host
 )
 
 class TestParseCreateHTTP:
@@ -67,3 +68,16 @@ Connection: Close\r
 
     def test_create_HTTP_response(self):
         assert create_HTTP_message(self.response_struct) == self.response_msg
+
+class TestGetURI:
+    host = b"cc4303.bachmann.cl"
+    request_struct = {
+        "START_LINE": b"GET / HTTP/1.1",
+        "BODY": b"",
+        "Host": host,
+        "User-Agent": b"curl/8.5.0",
+        "Accept": b"*/*"
+    }
+
+    def test_parse_URI(self):
+        assert get_host(self.request_struct) == self.host
