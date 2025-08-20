@@ -49,7 +49,12 @@ def create_HTTP_message(http_struct: dict[str, bytes]) -> bytes:
 
     return message 
 
-def get_host(http_struct: dict[str, bytes]) -> bytes: ...
+def get_host(http_struct: dict[str, bytes]) -> bytes:
+    try:
+        return http_struct['Host']
+    except KeyError:
+        print("Error: Header host no esta presente en la petición")
+        sys.exit(1)
 
 if __name__ == "__main__":
 
