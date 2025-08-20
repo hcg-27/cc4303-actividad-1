@@ -2,6 +2,7 @@ import argparse
 import json
 import socket
 import sys
+from urllib.parse import urlparse
 from datetime import datetime as dt
 from pathlib import Path
 
@@ -56,7 +57,13 @@ def get_host(http_struct: dict[str, bytes]) -> bytes:
         print("Error: Header host no esta presente en la petición")
         sys.exit(1)
 
-def get_path(http_struct: dict[str, bytes]) -> bytes: ...
+def get_path(http_struct: dict[str, bytes]) -> bytes:
+    try:
+        url = http_struct['START_LINE'].split(b" ")[1] 
+        return urlparse(url.decode()).path.encode()
+    except KeyError:
+        print("Error: mensaje HTTP mal formado, no posee start line")
+        sys.exit(1)
 
 if __name__ == "__main__":
 
