@@ -1,7 +1,8 @@
 from proxy.proxy import (
     parse_HTTP_message,
     create_HTTP_message,
-    get_host
+    get_host,
+    get_path
 )
 
 class TestParseCreateHTTP:
@@ -69,9 +70,10 @@ Connection: Close\r
     def test_create_HTTP_response(self):
         assert create_HTTP_message(self.response_struct) == self.response_msg
 
-class TestGetURI:
+class TestGetElementsFromURI:
     host = b"cc4303.bachmann.cl"
-    request_struct = {
+    
+    request_struct_1 = {
         "START_LINE": b"GET / HTTP/1.1",
         "BODY": b"",
         "Host": host,
@@ -79,5 +81,18 @@ class TestGetURI:
         "Accept": b"*/*"
     }
 
-    def test_parse_URI(self):
-        assert get_host(self.request_struct) == self.host
+    request_struct_2 = {
+        "START_LINE": b"GET /replace HTTP/1.1",
+        "BODY": b"",
+        "Host": host,
+        "User-Agent": b"curl/8.5.0",
+        "Accept": b"*/*"
+    }
+
+    def test_get_URI(self):
+        assert get_host(self.request_struct_1) == self.host
+        assert get_host(self.request_struct_2) == self.host
+    
+    def test_get_path(self):
+        assert get_path(self.request_struct_1) == b"/"
+        assert get_path(self.request_struct_2) == b"/replace"

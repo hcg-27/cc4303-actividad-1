@@ -56,6 +56,8 @@ def get_host(http_struct: dict[str, bytes]) -> bytes:
         print("Error: Header host no esta presente en la petición")
         sys.exit(1)
 
+def get_path(http_struct: dict[str, bytes]) -> bytes: ...
+
 if __name__ == "__main__":
 
     # Inicializar y configurar cli parser
