@@ -2,7 +2,8 @@ from proxy.proxy import (
     parse_HTTP_message,
     create_HTTP_message,
     get_host,
-    get_path
+    get_path,
+    is_forbidden
 )
 
 class TestParseCreateHTTP:
@@ -96,3 +97,18 @@ class TestGetElementsFromURI:
     def test_get_path(self):
         assert get_path(self.request_struct_1) == b"/"
         assert get_path(self.request_struct_2) == b"/replace"
+
+class TestBlockForbiddenURI:
+    blocked = {
+        "cc4303.bachmann.cl/secret"
+    }
+
+    request_message = b"""GET /secret HTTP/1.1\r
+Host: cc4303.bachmann.cl\r
+User-Agent: curl/8.5.0\r
+Accept: */*\r
+\r
+"""
+    def test_is_forbidden(self):
+        assert is_forbidden(self.request_message, self.blocked) == True
+

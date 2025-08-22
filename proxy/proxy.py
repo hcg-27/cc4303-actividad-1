@@ -65,6 +65,8 @@ def get_path(http_struct: dict[str, bytes]) -> bytes:
         print("Error: mensaje HTTP mal formado, no posee start line")
         sys.exit(1)
 
+def is_forbidden(request: bytes, blocked: set[str]) -> bool: ...
+
 if __name__ == "__main__":
 
     # Inicializar y configurar cli parser
