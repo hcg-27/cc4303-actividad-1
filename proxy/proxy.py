@@ -5,6 +5,7 @@ import sys
 from urllib.parse import urlparse
 from datetime import datetime as dt
 from pathlib import Path
+from typing import Iterable
 
 IP, PORT = 'localhost', 8000
 
@@ -76,6 +77,8 @@ def is_forbidden(request: bytes, blocked: set[str]) -> bool:
     uri = f"{host}{path}"
     
     return uri in blocked
+
+def parse_json(filepath: Path) -> dict[str, Iterable[str]]: ...
 
 if __name__ == "__main__":
 

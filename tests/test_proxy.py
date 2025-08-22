@@ -1,9 +1,13 @@
+import json
+
+from pathlib import Path
 from proxy.proxy import (
     parse_HTTP_message,
     create_HTTP_message,
     get_host,
     get_path,
-    is_forbidden
+    is_forbidden,
+    parse_json
 )
 
 class TestParseCreateHTTP:
@@ -112,3 +116,21 @@ Accept: */*\r
     def test_is_forbidden(self):
         assert is_forbidden(self.request_message, self.blocked) == True
 
+class TestParseJSON:
+
+    filepath = Path("config/config.json")
+    expected = {
+        'X-ElQuePregunta': 'Hernán Felipe Cisternas García',
+        'blocked': {
+            'cc4303.bachmann.cl/secret',
+            'http://www.dcc.uchile.cl/'
+        },
+        'forbidden_words': {
+            'proxy': '[REDACTED]',
+            'DCC': '[FORBIDDEN]',
+            'biblioteca': '[???]'
+        }
+    }
+
+    def test_parse_json(self):
+        assert parse_json(self.filepath) == self.expected
