@@ -5,9 +5,14 @@ import sys
 from urllib.parse import urlparse
 from datetime import datetime as dt
 from pathlib import Path
-from typing import Iterable
+from typing import TypedDict
 
 IP, PORT = 'localhost', 8000
+Config = TypedDict('Config', {
+    'X-ElQuePregunta': str,
+    'blocked': set[str],
+    'forbidden_words': dict[str, str]
+})
 
 def parse_HTTP_message(http_message: bytes) -> dict[str, bytes]:
     """Parse an HTTP message into a dictionary.
@@ -78,7 +83,7 @@ def is_forbidden(request: bytes, blocked: set[str]) -> bool:
     
     return uri in blocked
 
-def parse_json(filepath: Path) -> dict[str, Iterable[str]]:
+def parse_json(filepath: Path) -> Config:
     # Cargar json en memoria
     try:
         with open(filepath) as file:
