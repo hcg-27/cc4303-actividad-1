@@ -1,7 +1,7 @@
 {
     "X-ElQuePregunta": "Hernán Felipe Cisternas García",
     "blocked": [
-        "cc4303.bachmann.cl/secrets",
+        "cc4303.bachmann.cl/secret",
         "http://www.dcc.uchile.cl/"
     ],
     "forbidden_words": [
