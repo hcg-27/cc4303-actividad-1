@@ -78,7 +78,32 @@ def is_forbidden(request: bytes, blocked: set[str]) -> bool:
     
     return uri in blocked
 
-def parse_json(filepath: Path) -> dict[str, Iterable[str]]: ...
+def parse_json(filepath: Path) -> dict[str, Iterable[str]]:
+    # Cargar json en memoria
+    try:
+        with open(filepath) as file:
+            json_file = json.load(file)
+    except json.JSONDecodeError:
+        print("Error: formato JSON invalido en {filepath}")
+        sys.exit(1)
+    except FileNotFoundError:
+        print(f"Error: el archivo {filepath} no existe")
+        sys.exit(1)
+
+    # Transformar json_file['forbidden_words'] de una lista de diccionarios
+    # a un diccionario
+    forbidden_words = {}
+    for dictionary in json_file['forbidden_words']:
+        for k, v in dictionary.items():
+            forbidden_words[k] = v
+
+    return {
+        'X-ElQuePregunta': json_file['X-ElQuePregunta'],
+        'blocked': {
+            site for site in json_file['blocked']
+        },
+        'forbidden_words': forbidden_words
+    }
 
 if __name__ == "__main__":
 
