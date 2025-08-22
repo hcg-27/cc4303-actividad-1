@@ -65,7 +65,17 @@ def get_path(http_struct: dict[str, bytes]) -> bytes:
         print("Error: mensaje HTTP mal formado, no posee start line")
         sys.exit(1)
 
-def is_forbidden(request: bytes, blocked: set[str]) -> bool: ...
+def is_forbidden(request: bytes, blocked: set[str]) -> bool:
+
+    # Procesar petición
+    request_struct = parse_HTTP_message(request)
+
+    # Construir URI
+    host = get_host(request_struct).decode()
+    path = get_path(request_struct).decode()
+    uri = f"{host}{path}"
+    
+    return uri in blocked
 
 if __name__ == "__main__":
 
