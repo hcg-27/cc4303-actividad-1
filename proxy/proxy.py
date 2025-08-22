@@ -96,37 +96,57 @@ if __name__ == "__main__":
     proxy_socket.bind((IP, PORT))
     proxy_socket.listen(5)
 
-    # Esperar petición de conexicón de algún cliente
+    # Esperar petición de conexión de algún cliente
     client_socket, _ = proxy_socket.accept()
 
-    # Esperar GET del cliente
-    request = client_socket.recv(8192)
-    if b'GET' in parse_HTTP_message(request)["START_LINE"]:
-        # Leer archivo HTML
-        with open("index.html", "rb") as html_file:
-            content = html_file.read()
-            content_length = len(content)
+    # Esperar request del cliente
+    request_message = client_socket.recv(8192)
 
-        # Crear estructura para la respuesta HTTP
-        response_struct = {
-            "START_LINE": b'HTTP/1.1 200 OK',
-            "BODY": content,
-            "Server": b'Linux Mint/22.1',
-            "Date": f'{dt.now().strftime("%a, %d %b %Y %H:%M:%S UTC-4")}'.encode(),
-            "Content-Type": b'text/html; charset=utf-8',
-            "Content-Length": f' {content_length}'.encode(),
-            "Connection": b'keep-alive',
-            "Acces_Control-Allow-Origin": b'*'
-        }
+    # Procesar petición
+    request_struct = parse_HTTP_message(request_message)
+
+    # Obtener dirección del servidor al que va dirigida la petición
+    server_host = get_host(request_struct).decode()
+
+    # Pedir conexión al servidor
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.connect((server_host, 80))
+
+    # Enviar request del cliente al servidor
+    server_socket.send(create_HTTP_message(request_struct))
+
+    # Esperar respuesta del servidor
+    response = server_socket.recv(8192)
+
+    # Enviar respuesta del servidor al cliente
+    client_socket.send(response)
+
+    #if b'GET' in parse_HTTP_message(request)["START_LINE"]:
+    #    # Leer archivo HTML
+    #    with open("index.html", "rb") as html_file:
+    #        content = html_file.read()
+    #        content_length = len(content)
+
+    #    # Crear estructura para la respuesta HTTP
+    #    response_struct = {
+    #        "START_LINE": b'HTTP/1.1 200 OK',
+    #        "BODY": content,
+    #        "Server": b'Linux Mint/22.1',
+    #        "Date": f'{dt.now().strftime("%a, %d %b %Y %H:%M:%S UTC-4")}'.encode(),
+    #        "Content-Type": b'text/html; charset=utf-8',
+    #        "Content-Length": f' {content_length}'.encode(),
+    #        "Connection": b'keep-alive',
+    #        "Acces_Control-Allow-Origin": b'*'
+    #    }
         
-        # Agregar header
-        response_struct |= {'X-ElQuePregunta': x_el_que_pregunta}
+    #    # Agregar header
+    #    response_struct |= {'X-ElQuePregunta': x_el_que_pregunta}
 
-        # Construir respuesta
-        response = create_HTTP_message(response_struct)
+    #    # Construir respuesta
+    #    response = create_HTTP_message(response_struct)
 
-        # Enviar respuesta
-        client_socket.send(response)
+    #    # Enviar respuesta
+    #    client_socket.send(response)
 
-        # Cerrar conexión
-        client_socket.close()
+    #    # Cerrar conexión
+    #    client_socket.close()
