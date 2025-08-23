@@ -186,10 +186,18 @@ if __name__ == "__main__":
         server_socket.send(create_HTTP_message(request_struct))
 
         # Esperar respuesta del servidor
-        response = server_socket.recv(8192)
+        response_message = server_socket.recv(8192)
+
+        # Procesar respuesta
+        response_struct = parse_HTTP_message(response_message)
+
+        # Censurar las palabras que sean necesarias
+        response_struct['BODY'] = censor_content(
+            response_struct['BODY'], config_file['forbidden_words']
+        )
 
         # Enviar respuesta del servidor al cliente
-        client_socket.send(response)
+        client_socket.send(create_HTTP_message(response_struct))
 
         # Cerrar sockets
         server_socket.close()
