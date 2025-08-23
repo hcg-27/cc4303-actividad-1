@@ -110,6 +110,8 @@ def parse_json(filepath: Path) -> Config:
         'forbidden_words': forbidden_words
     }
 
+def censor_content(content: bytes, to_replace: dict[str, str]) -> bytes: ...
+
 if __name__ == "__main__":
 
     # Inicializar y configurar cli parser

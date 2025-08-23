@@ -7,7 +7,8 @@ from proxy.proxy import (
     get_host,
     get_path,
     is_forbidden,
-    parse_json
+    parse_json,
+    censor_content
 )
 
 class TestParseCreateHTTP:
@@ -102,7 +103,7 @@ class TestGetElementsFromURI:
         assert get_path(self.request_struct_1) == b"/"
         assert get_path(self.request_struct_2) == b"/replace"
 
-class TestBlockForbiddenURI:
+class TestModifyMessages:
     blocked = {
         "cc4303.bachmann.cl/secret"
     }
@@ -113,8 +114,19 @@ User-Agent: curl/8.5.0\r
 Accept: */*\r
 \r
 """
+    response = b"esto es un proxy, usado para acceder a la biblioteca del DCC"
+    expected = b"esto es un [REDACTED], usado para acceder a la [???] del [FORBIDDEN]"
+    forbidden = {
+        'proxy': "[REDACTED]",
+        'DCC': "[FORBIDDEN]",
+        'biblioteca': "[???]"
+    }
+
     def test_is_forbidden(self):
         assert is_forbidden(self.request_message, self.blocked) == True
+
+    def test_censor_content(self):
+        assert censor_content(self.response, self.forbidden) == self.expected
 
 class TestParseJSON:
 
