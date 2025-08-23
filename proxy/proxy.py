@@ -163,6 +163,10 @@ if __name__ == "__main__":
         # Procesar request del cliente
         request_struct = parse_HTTP_message(request_message)
 
+        # Agregar Header X-ElQuePregunta
+        x_el_que_pregunta = config_file['X-ElQuePregunta'].encode()
+        request_struct |= {'X-ElQuePregunta': x_el_que_pregunta}
+
         # Obtener dirección del servidor al que va dirigida la petición
         server_host = get_host(request_struct).decode()
 
