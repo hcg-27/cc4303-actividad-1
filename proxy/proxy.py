@@ -117,6 +117,26 @@ def censor_content(content: bytes, to_replace: dict[str, str]) -> bytes:
     
     return content
 
+def receive_http_message(socket: socket.socket, buff_size: int) -> bytes:
+    message = b''
+
+    # Recibir todos los headers
+    while b'\r\n\r\n' not in message:
+        message += socket.recv(buff_size)
+
+    # Procesar headers
+    headers = parse_HTTP_message(message)
+
+    # Recibir body de ser necesario
+    if 'Content-Length' in headers.keys():
+        content_length = int(headers['Content-Length'])
+        received = len(headers['BODY'])
+        while received < content_length:
+            body = socket.recv(buff_size)
+            message += body
+            received += len(body)
+
+    return message 
 
 if __name__ == "__main__":
 
@@ -143,7 +163,7 @@ if __name__ == "__main__":
     client_socket, _ = proxy_socket.accept()
 
     # Esperar request del cliente
-    request_message = client_socket.recv(8192)
+    request_message = receive_http_message(client_socket, 50)
 
     # Verificar que la dirección no este prohibida
     if is_forbidden(request_message, config_file['blocked']):
@@ -186,7 +206,7 @@ if __name__ == "__main__":
         server_socket.send(create_HTTP_message(request_struct))
 
         # Esperar respuesta del servidor
-        response_message = server_socket.recv(8192)
+        response_message = receive_http_message(server_socket, 50)
 
         # Procesar respuesta
         response_struct = parse_HTTP_message(response_message)
@@ -195,6 +215,10 @@ if __name__ == "__main__":
         response_struct['BODY'] = censor_content(
             response_struct['BODY'], config_file['forbidden_words']
         )
+        
+        # Ajustar content-length
+        content_length = len(response_struct['BODY'])
+        response_struct['Content-Length'] = f"{content_length}".encode()
 
         # Enviar respuesta del servidor al cliente
         client_socket.send(create_HTTP_message(response_struct))
@@ -202,6 +226,9 @@ if __name__ == "__main__":
         # Cerrar sockets
         server_socket.close()
         client_socket.close()
+    
+    # Cerrar socket del proxy
+    proxy_socket.close()
 
     #if b'GET' in parse_HTTP_message(request)["START_LINE"]:
     #    # Leer archivo HTML
