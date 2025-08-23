@@ -110,7 +110,13 @@ def parse_json(filepath: Path) -> Config:
         'forbidden_words': forbidden_words
     }
 
-def censor_content(content: bytes, to_replace: dict[str, str]) -> bytes: ...
+def censor_content(content: bytes, to_replace: dict[str, str]) -> bytes:
+    # Reemplazar las palabras
+    for k, v in to_replace.items():
+        content = content.replace(k.encode(), v.encode())
+    
+    return content
+
 
 if __name__ == "__main__":
 
