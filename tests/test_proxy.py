@@ -1,6 +1,14 @@
+import json
+
+from pathlib import Path
 from proxy.proxy import (
     parse_HTTP_message,
-    create_HTTP_message
+    create_HTTP_message,
+    get_host,
+    get_path,
+    is_forbidden,
+    parse_json,
+    censor_content
 )
 
 class TestParseCreateHTTP:
@@ -67,3 +75,74 @@ Connection: Close\r
 
     def test_create_HTTP_response(self):
         assert create_HTTP_message(self.response_struct) == self.response_msg
+
+class TestGetElementsFromURI:
+    host = b"cc4303.bachmann.cl"
+    
+    request_struct_1 = {
+        "START_LINE": b"GET / HTTP/1.1",
+        "BODY": b"",
+        "Host": host,
+        "User-Agent": b"curl/8.5.0",
+        "Accept": b"*/*"
+    }
+
+    request_struct_2 = {
+        "START_LINE": b"GET /replace HTTP/1.1",
+        "BODY": b"",
+        "Host": host,
+        "User-Agent": b"curl/8.5.0",
+        "Accept": b"*/*"
+    }
+
+    def test_get_URI(self):
+        assert get_host(self.request_struct_1) == self.host
+        assert get_host(self.request_struct_2) == self.host
+    
+    def test_get_path(self):
+        assert get_path(self.request_struct_1) == b"/"
+        assert get_path(self.request_struct_2) == b"/replace"
+
+class TestModifyMessages:
+    blocked = {
+        "cc4303.bachmann.cl/secret"
+    }
+
+    request_message = b"""GET /secret HTTP/1.1\r
+Host: cc4303.bachmann.cl\r
+User-Agent: curl/8.5.0\r
+Accept: */*\r
+\r
+"""
+    response = b"esto es un proxy, usado para acceder a la biblioteca del DCC"
+    expected = b"esto es un [REDACTED], usado para acceder a la [???] del [FORBIDDEN]"
+    forbidden = {
+        'proxy': "[REDACTED]",
+        'DCC': "[FORBIDDEN]",
+        'biblioteca': "[???]"
+    }
+
+    def test_is_forbidden(self):
+        assert is_forbidden(self.request_message, self.blocked) == True
+
+    def test_censor_content(self):
+        assert censor_content(self.response, self.forbidden) == self.expected
+
+class TestParseJSON:
+
+    filepath = Path("config/config.json")
+    expected = {
+        'X-ElQuePregunta': 'Hernán Felipe Cisternas García',
+        'blocked': {
+            'cc4303.bachmann.cl/secret',
+            'http://www.dcc.uchile.cl/'
+        },
+        'forbidden_words': {
+            'proxy': '[REDACTED]',
+            'DCC': '[FORBIDDEN]',
+            'biblioteca': '[???]'
+        }
+    }
+
+    def test_parse_json(self):
+        assert parse_json(self.filepath) == self.expected
