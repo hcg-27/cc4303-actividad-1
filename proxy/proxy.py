@@ -122,17 +122,7 @@ if __name__ == "__main__":
     filepath = Path(vars(parser.parse_args())['config'])
 
     # Leer archivo de configuración
-    try:
-        with open(filepath, "r") as json_file:
-            x_el_que_pregunta = bytes(
-                json.load(json_file)["X-ElQuePregunta"], encoding="UTF-8"
-            )
-    except json.JSONDecodeError:
-        print(f"Error: formato JSON invalido en {filepath}")
-        sys.exit(1)
-    except FileNotFoundError:
-        print(f"Error: el archivo {filepath} no existe")
-        sys.exit(1)
+    config_file = parse_json(filepath)
 
     # Inicializar socket del proxy
     proxy_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -147,24 +137,51 @@ if __name__ == "__main__":
     # Esperar request del cliente
     request_message = client_socket.recv(8192)
 
-    # Procesar petición
-    request_struct = parse_HTTP_message(request_message)
+    # Verificar que la dirección no este prohibida
+    if is_forbidden(request_message, config_file['blocked']):
+        # Cargar html en memoria 
+        with open(Path("403.html"), 'rb') as file:
+            error_html = file.read()
 
-    # Obtener dirección del servidor al que va dirigida la petición
-    server_host = get_host(request_struct).decode()
+        # Construir response
+        response_struct = {
+            'START_LINE': b'HTTP/1.1 403 Forbidden',
+            'BODY': error_html,
+            'Server': b'Linux Mint/22.1',
+            'Date': dt.now().strftime("%a, %d %b %Y %H:%M:%S UTC-4").encode(),
+            'Content-Type': b'text/html; charset=utf-8',
+            'Content-Length': f"{len(error_html)}".encode(),
+            'Access-Control-Allow-Origin': b'*'
+        }
+        
+        # Enviar Response
+        client_socket.send(create_HTTP_message(response_struct))
 
-    # Pedir conexión al servidor
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.connect((server_host, 80))
+        # Cerrar conexión
+        client_socket.close()
+    else:
+        # Procesar request del cliente
+        request_struct = parse_HTTP_message(request_message)
 
-    # Enviar request del cliente al servidor
-    server_socket.send(create_HTTP_message(request_struct))
+        # Obtener dirección del servidor al que va dirigida la petición
+        server_host = get_host(request_struct).decode()
 
-    # Esperar respuesta del servidor
-    response = server_socket.recv(8192)
+        # Pedir conexión al servidor
+        server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server_socket.connect((server_host, 80))
 
-    # Enviar respuesta del servidor al cliente
-    client_socket.send(response)
+        # Enviar request del cliente al servidor
+        server_socket.send(create_HTTP_message(request_struct))
+
+        # Esperar respuesta del servidor
+        response = server_socket.recv(8192)
+
+        # Enviar respuesta del servidor al cliente
+        client_socket.send(response)
+
+        # Cerrar sockets
+        server_socket.close()
+        client_socket.close()
 
     #if b'GET' in parse_HTTP_message(request)["START_LINE"]:
     #    # Leer archivo HTML
